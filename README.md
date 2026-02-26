@@ -174,3 +174,4 @@ Inactive (해제)
 ✅ **확장성**
 - 새 와이어 시스템 추가 용이 (WireSystem 복사)
 - 새 부스트 시스템 추가 간편 (GasBoostSystem 상속)
+

@@ -16,12 +16,14 @@ public class PlayerInputHandler : MonoBehaviour
         // 마우스 왼쪽 클릭 - 왼쪽 와이어
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
+            Debug.Log("좌 클릭 감지");
             OnLeftWireInput?.Invoke();
         }
 
         // 마우스 오른쪽 클릭 - 오른쪽 와이어
-        if (Input.GetMouseButtonDown(1))
+        if (Mouse.current.rightButton.wasPressedThisFrame)
         {
+            Debug.Log("우 클릭 감지");
             OnRightWireInput?.Invoke();
         }
     }

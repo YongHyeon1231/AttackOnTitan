@@ -7,7 +7,7 @@ using UnityEngine.InputSystem;
 /// </summary>
 public class GasBoostSystem : MonoBehaviour
 {
-    [SerializeField] private float boostForce = 5f;              // 가스 분출 힘
+    [SerializeField] private float boostForce = 25f;              // 가스 분출 힘
     [SerializeField] private float cooldown = 0.2f;              // 쿨타임
     [SerializeField] private float maxDuration = 2f;             // 최대 지속 시간
 

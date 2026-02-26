@@ -7,9 +7,9 @@ using UnityEngine;
 public class WireSystem : MonoBehaviour
 {
     [SerializeField] private Transform gearTransform;           // 발사부 위치
-    [SerializeField] private float pullForce = 5f;              // 당기는 힘
+    [SerializeField] private float pullForce = 25f;             // 당기는 힘
     [SerializeField] private float maxWireDistance = 100f;      // 와이어 최대 거리
-    [SerializeField] private LayerMask hookableLayer;           // 고정 가능한 레이어
+    [SerializeField] private LayerMask hookableLayer = 1 << 3;  // 고정 가능한 레이어
 
     private Rigidbody rb;
     private WireState wireState;
@@ -22,8 +22,21 @@ public class WireSystem : MonoBehaviour
 
     private void Awake()
     {
+        // 부모 오브젝트에서 Rigidbody 찾기 (자식 오브젝트에는 없음)
         rb = GetComponent<Rigidbody>();
+        if (rb == null)
+        {
+            rb = GetComponentInParent<Rigidbody>();
+            Debug.Log("부모에서 Rigidbody를 찾았습니다: " + (rb != null ? rb.gameObject.name : "없음"));
+        }
         wireState = new WireState();
+
+        // gearTransform 자동 설정 (부모=Player 또는 자신)
+        if (gearTransform == null)
+        {
+            gearTransform = transform.parent != null ? transform.parent : transform;
+            Debug.Log("gearTransform을 설정했습니다: " + gearTransform.gameObject.name);
+        }
     }
 
     /// <summary>
@@ -104,10 +117,17 @@ public class WireSystem : MonoBehaviour
     /// </summary>
     public void ApplyForce()
     {
+        if (rb == null)
+        {
+            Debug.LogError("Rigidbody가 없습니다!");
+            return;
+        }
+
         if (wireState.CurrentState == WireState.State.Pulling && gearTransform != null)
         {
             Vector3 direction = (wireState.TargetPosition - gearTransform.position).normalized;
-            rb.linearVelocity += direction * pullForce * Time.fixedDeltaTime;
+            rb.AddForce(direction * pullForce, ForceMode.Acceleration);
+            Debug.Log("와이어로 당기는 중! 방향: " + direction + " 힘: " + pullForce);
         }
     }
 
@@ -133,6 +153,12 @@ public class WireSystem : MonoBehaviour
     /// </summary>
     private Vector3 GetWireTarget()
     {
+        if (Camera.main == null)
+        {
+            Debug.LogError("Main Camera를 찾을 수 없습니다!");
+            return gearTransform.position + transform.forward * maxWireDistance;
+        }
+
         Vector3 screenCenter = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
         Ray ray = Camera.main.ScreenPointToRay(screenCenter);
 
@@ -142,11 +168,17 @@ public class WireSystem : MonoBehaviour
             // 닿은 오브젝트가 Hookable Layer인지 확인
             if (((1 << hit.collider.gameObject.layer) & hookableLayer) != 0)
             {
+                Debug.Log("와이어 타겟 감지: " + hit.collider.gameObject.name + " Layer: " + LayerMask.LayerToName(hit.collider.gameObject.layer));
                 return hit.point;
+            }
+            else
+            {
+                Debug.Log("카메라 중앙에 있지만 Hookable Layer가 아님. 충돌한 오브젝트 Layer: " + LayerMask.LayerToName(hit.collider.gameObject.layer));
             }
         }
 
         // Hookable Layer가 아니거나 닿은 것이 없으면 기본 거리만큼 떨어진 지점
+        Debug.Log("카메라 중앙에 Hookable Layer 충돌 없음. 최대 거리로 발사");
         return ray.origin + ray.direction * maxWireDistance;
     }
 

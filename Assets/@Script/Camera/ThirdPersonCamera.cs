@@ -3,37 +3,39 @@ using UnityEngine.InputSystem;
 
 public class ThirdPersonCamera : MonoBehaviour
 {
-    [Header("카메라 설정")]
-    [SerializeField] private Transform target;                  // 추적 대상 (플레이어)
-    [SerializeField] private float distance = 7f;               // 플레이어와의 거리
-    [SerializeField] private float height = 1.5f;               // 카메라 높이 오프셋
-    [SerializeField] private float smoothSpeed = 5f;            // 카메라 추적 부드러움 (작을수록 빠름)
+    [Header("카메라 위치 설정 (플레이어 기준)")]
+    [SerializeField] private Vector3 cameraLocalPosition = new Vector3(0, 3f, -9f);  // X, Y, Z 오프셋
+
+    [Header("카메라 회전 설정")]
+    [SerializeField] private Vector3 cameraLocalRotation = new Vector3(10f, 0, 0);   // X, Y, Z 회전
 
     [Header("마우스 시점 제어")]
-    [SerializeField] private float mouseSensitivity = 0.5f;     // 마우스 감도
-    [SerializeField] private float minVerticalAngle = -30f;     // 최소 수직 각도 (아래)
-    [SerializeField] private float maxVerticalAngle = 60f;      // 최대 수직 각도 (위)
+    [SerializeField] private float horizontalSensitivity = 1f;   // 좌우 감도
+    [SerializeField] private float minHorizontalAngle = -45f;    // 좌우 최소 (-45도)
+    [SerializeField] private float maxHorizontalAngle = 45f;     // 좌우 최대 (45도)
+    [SerializeField] private float maxVerticalAngle = 20f;       // 위 제한 (이 각도까지만 위를 봄)
 
-    private float horizontalAngle = 0f;  // 수평 각도 (좌우)
-    private float verticalAngle = 15f;   // 수직 각도 (위아래)
+    private Transform target;                 // 플레이어
+    private float horizontalAngle = 0f;      // 좌우 각도
+    private float verticalAngle = 0f;        // 상하 각도 (위만 가능)
 
     void Start()
     {
-        // 플레이어가 할당되지 않았으면 자동 찾기
-        if (target == null)
-        {
-            target = FindObjectOfType<Player>().transform;
-        }
-
+        // 플레이어 찾기 (자동 할당)
+        target = FindObjectOfType<Player>().transform;
+        
+        // 카메라를 플레이어의 자식 오브젝트로 설정 (따라다니게)
+        transform.SetParent(target);
+        
         // 커서 잠금 (게임 중 마우스 커서 숨김)
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
-    void LateUpdate()
+    void FixedUpdate()
     {
         if (target == null) return;
-
+        
         HandleMouseInput();
         UpdateCameraPosition();
     }
@@ -43,12 +45,13 @@ public class ThirdPersonCamera : MonoBehaviour
         // 마우스 입력 감지
         Vector2 mouseDelta = Mouse.current.delta.ReadValue();
 
-        // 좌우 회전 (마우스 X) - 부호 반전으로 자연스러운 방향
-        horizontalAngle -= mouseDelta.x * mouseSensitivity;
+        // 좌우 회전 (마우스 X) - -45 ~ 45도
+        horizontalAngle += mouseDelta.x * horizontalSensitivity;
+        horizontalAngle = Mathf.Clamp(horizontalAngle, minHorizontalAngle, maxHorizontalAngle);
 
-        // 위아래 회전 (마우스 Y)
-        verticalAngle -= mouseDelta.y * mouseSensitivity;
-        verticalAngle = Mathf.Clamp(verticalAngle, minVerticalAngle, maxVerticalAngle);
+        // 상하 회전 (마우스 Y) - 위만 볼 수 있음 (0 ~ maxVerticalAngle)
+        verticalAngle -= mouseDelta.y * horizontalSensitivity * 0.5f;
+        verticalAngle = Mathf.Clamp(verticalAngle, 0f, maxVerticalAngle);
 
         // ESC 키로 커서 해제/잠금 토글
         if (Keyboard.current.escapeKey.wasPressedThisFrame)
@@ -60,26 +63,21 @@ public class ThirdPersonCamera : MonoBehaviour
 
     private void UpdateCameraPosition()
     {
-        // 플레이어 위치 기준점
-        Vector3 targetPosition = target.position + Vector3.up * height;
+        // 플레이어를 카메라의 좌우 각도에 맞춰 회전
+        target.localRotation = Quaternion.Euler(0, horizontalAngle, 0);
+        
+        // 기본 카메라 위치 설정 (Inspector에서 수정 가능)
+        transform.localPosition = cameraLocalPosition;
 
-        // 극좌표를 이용한 카메라 위치 계산
-        float radHorizontal = horizontalAngle * Mathf.Deg2Rad;
-        float radVertical = verticalAngle * Mathf.Deg2Rad;
+        // 기본 회전에 마우스 입력 각도 추가
+        Vector3 finalRotation = cameraLocalRotation;
+        finalRotation.y += horizontalAngle;  // 좌우 회전
+        finalRotation.x += verticalAngle;    // 상하 회전 (위만)
 
-        // 카메라 오프셋 계산
-        Vector3 cameraOffset = new Vector3(
-            Mathf.Sin(radHorizontal) * Mathf.Cos(radVertical),
-            Mathf.Sin(radVertical),
-            -Mathf.Cos(radHorizontal) * Mathf.Cos(radVertical)
-        ) * distance;
-
-        Vector3 desiredPosition = targetPosition + cameraOffset;
-
-        // 부드럽게 카메라 이동 (Lerp 사용)
-        transform.position = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime);
-
-        // 플레이어를 바라보기 (약간 위 지점)
-        transform.LookAt(targetPosition + Vector3.up * 0.5f);
+        // 카메라 회전 적용
+        transform.localRotation = Quaternion.Euler(finalRotation);
     }
 }
+
+
+
