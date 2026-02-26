@@ -1663,12 +1663,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a25a2c9a99e393b4ba86a3ad3f4409e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ThirdPersonCamera
-  cameraLocalPosition: {x: 0, y: 5, z: -9}
+  cameraLocalPosition: {x: 0, y: 3, z: -7}
   cameraLocalRotation: {x: 10, y: 0, z: 0}
-  horizontalSensitivity: 1
+  horizontalSensitivity: 0.25
   minHorizontalAngle: -45
   maxHorizontalAngle: 45
-  maxVerticalAngle: 20
+  minVerticalAngle: -45
+  maxVerticalAngle: 45
 --- !u!1 &1121566709
 GameObject:
   m_ObjectHideFlags: 0

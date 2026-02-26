@@ -4,16 +4,17 @@ using UnityEngine.InputSystem;
 public class ThirdPersonCamera : MonoBehaviour
 {
     [Header("카메라 위치 설정 (플레이어 기준)")]
-    [SerializeField] private Vector3 cameraLocalPosition = new Vector3(0, 3f, -9f);  // X, Y, Z 오프셋
+    [SerializeField] private Vector3 cameraLocalPosition = new Vector3(0, 3f, -7f);  // X, Y, Z 오프셋
 
     [Header("카메라 회전 설정")]
     [SerializeField] private Vector3 cameraLocalRotation = new Vector3(10f, 0, 0);   // X, Y, Z 회전
 
     [Header("마우스 시점 제어")]
-    [SerializeField] private float horizontalSensitivity = 1f;   // 좌우 감도
+    [SerializeField] private float horizontalSensitivity = 0.25f;   // 좌우 감도
     [SerializeField] private float minHorizontalAngle = -45f;    // 좌우 최소 (-45도)
     [SerializeField] private float maxHorizontalAngle = 45f;     // 좌우 최대 (45도)
-    [SerializeField] private float maxVerticalAngle = 20f;       // 위 제한 (이 각도까지만 위를 봄)
+    [SerializeField] private float minVerticalAngle = -45f;      // 아래 제한 (-45도까지 아래)
+    [SerializeField] private float maxVerticalAngle = 45f;       // 위 제한 (45도까지 위)
 
     private Transform target;                 // 플레이어
     private float horizontalAngle = 0f;      // 좌우 각도
@@ -32,7 +33,7 @@ public class ThirdPersonCamera : MonoBehaviour
         Cursor.visible = false;
     }
 
-    void FixedUpdate()
+    void LateUpdate()
     {
         if (target == null) return;
         
@@ -49,9 +50,9 @@ public class ThirdPersonCamera : MonoBehaviour
         horizontalAngle += mouseDelta.x * horizontalSensitivity;
         horizontalAngle = Mathf.Clamp(horizontalAngle, minHorizontalAngle, maxHorizontalAngle);
 
-        // 상하 회전 (마우스 Y) - 위만 볼 수 있음 (0 ~ maxVerticalAngle)
+        // 상하 회전 (마우스 Y) - 위아래 모두 볼 수 있음 (-45 ~ 45도)
         verticalAngle -= mouseDelta.y * horizontalSensitivity * 0.5f;
-        verticalAngle = Mathf.Clamp(verticalAngle, 0f, maxVerticalAngle);
+        verticalAngle = Mathf.Clamp(verticalAngle, minVerticalAngle, maxVerticalAngle);
 
         // ESC 키로 커서 해제/잠금 토글
         if (Keyboard.current.escapeKey.wasPressedThisFrame)
