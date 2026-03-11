@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// 플레이어 메인 클래스
@@ -27,7 +28,12 @@ public class Player : MonoBehaviour
     [Header("입력 처리")]
     [SerializeField] private PlayerInputHandler inputHandler;
 
+    [Header("이동 설정")]
+    [SerializeField] private float moveSpeed = 5f;           // 이동 속도
+    [SerializeField] private float rotationSpeed = 3f;       // 회전 속도
+
     private Rigidbody rb;
+    private Vector3 currentMovementDirection = Vector3.zero; // 현재 이동 방향
 
     private void Awake()
     {
@@ -40,7 +46,7 @@ public class Player : MonoBehaviour
         }
         
         // Rigidbody 설정 (안정성 개선)
-        rb.linearDamping = 1.0f;        // 선형 감속 (더 강함 = 덜 떨림)
+        rb.linearDamping = 0.1f;        // 선형 감속 (와이어 힘을 충분히 받도록 낮춤)
         rb.angularDamping = 1.0f;       // 회전 감속 (더 강함)
         rb.freezeRotation = true;       // 회전 완전 제약 (화면 떨림 방지)
 
@@ -129,6 +135,10 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
+        // 플레이어 이동 및 회전 처리
+        HandleMovement();
+        HandleRotation();
+
         // 가스 분출 입력 처리
         if (gasBoostSystem != null)
         {
@@ -158,6 +168,48 @@ public class Player : MonoBehaviour
 
         if (gasBoostSystem != null)
             gasBoostSystem.ApplyForce();
+
+        // 수평 이동만 적용 (와이어 힘과 중력이 Y축에 영향을 주도록)
+        rb.linearVelocity = new Vector3(currentMovementDirection.x, rb.linearVelocity.y, currentMovementDirection.z);
+    }
+
+    private void HandleMovement()
+    {
+        // WASD 입력 받기
+        Vector3 movementInput = Vector3.zero;
+
+        if (Keyboard.current.wKey.isPressed)
+            movementInput += transform.forward;    // W: 앞으로
+
+        if (Keyboard.current.sKey.isPressed)
+            movementInput -= transform.forward;    // S: 뒤로
+
+        if (Keyboard.current.aKey.isPressed)
+            movementInput -= transform.right;      // A: 좌측
+
+        if (Keyboard.current.dKey.isPressed)
+            movementInput += transform.right;      // D: 오른쪽
+
+        // 대각선 이동 시 정규화
+        if (movementInput.magnitude > 0)
+        {
+            movementInput.Normalize();
+            currentMovementDirection = movementInput * moveSpeed;
+        }
+        else
+        {
+            currentMovementDirection = Vector3.zero;
+        }
+    }
+
+    private void HandleRotation()
+    {
+        // 마우스 입력으로 캐릭터 회전 (좌우만)
+        Vector2 mouseDelta = Mouse.current.delta.ReadValue();
+
+        // Y축 회전 (좌우)
+        float rotationAmount = mouseDelta.x * rotationSpeed * Time.deltaTime;
+        transform.Rotate(0, rotationAmount, 0, Space.Self);
     }
 
     private WireVisualizer CreateWireVisualizer(string name, Color color)

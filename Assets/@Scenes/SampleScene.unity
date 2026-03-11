@@ -393,6 +393,8 @@ MonoBehaviour:
   wireSpeed: 10
   gasBoostSystem: {fileID: 0}
   inputHandler: {fileID: 0}
+  moveSpeed: 5
+  rotationSpeed: 3
 --- !u!1 &121956808
 GameObject:
   m_ObjectHideFlags: 0
@@ -1670,6 +1672,12 @@ MonoBehaviour:
   maxHorizontalAngle: 45
   minVerticalAngle: -45
   maxVerticalAngle: 45
+  dampingFactor: {x: 5, y: 5, z: 5}
+  hardLimitsMin: {x: -20, y: -5, z: -30}
+  hardLimitsMax: {x: 20, y: 20, z: 10}
+  deadZone: {x: 2, y: 1.5, z: 2}
+  useHardLimits: 1
+  useDeadZone: 1
 --- !u!1 &1121566709
 GameObject:
   m_ObjectHideFlags: 0

@@ -7,7 +7,7 @@ using UnityEngine;
 public class WireSystem : MonoBehaviour
 {
     [SerializeField] private Transform gearTransform;           // 발사부 위치
-    [SerializeField] private float pullForce = 25f;             // 당기는 힘
+    [SerializeField] private float pullForce = 50f;             // 당기는 힘
     [SerializeField] private float maxWireDistance = 100f;      // 와이어 최대 거리
     [SerializeField] private LayerMask hookableLayer = 1 << 3;  // 고정 가능한 레이어
 

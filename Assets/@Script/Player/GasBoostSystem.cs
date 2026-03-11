@@ -79,14 +79,15 @@ public class GasBoostSystem : MonoBehaviour
         if (!isBoosting) return;
 
         Camera mainCamera = Camera.main;
-        if (mainCamera != null)
+        if (mainCamera != null && rb != null)
         {
             // 카메라의 forward 방향으로 가스 분출
             Vector3 boostDirection = mainCamera.transform.forward;
             boostDirection.y *= 0.3f; // Y축 성분을 30%로 줄임
             boostDirection = boostDirection.normalized;
 
-            rb.linearVelocity += boostDirection * boostForce * Time.fixedDeltaTime;
+            // AddForce를 사용하여 Player의 velocity 덮어쓰기를 피함
+            rb.AddForce(boostDirection * boostForce, ForceMode.Acceleration);
         }
     }
 }
